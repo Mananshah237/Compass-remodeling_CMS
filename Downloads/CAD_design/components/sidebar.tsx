@@ -13,6 +13,8 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
+  Menu,
 } from "lucide-react"
 
 const navigation = [
@@ -40,6 +42,7 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(pathname.startsWith("/design") ? ["CAD", "Design"] : [])
+  const [collapsed, setCollapsed] = useState(false)
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems((prev) =>
@@ -75,11 +78,11 @@ export function Sidebar() {
           }}
         >
           <item.icon className="w-5 h-5" />
-          <span className="flex-1">{item.name}</span>
-          {item.hasSubmenu && (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />)}
+          {!collapsed && <span className="flex-1">{item.name}</span>}
+          {item.hasSubmenu && (!collapsed ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : null)}
         </div>
 
-        {item.hasSubmenu && isExpanded && item.submenu && (
+        {item.hasSubmenu && isExpanded && item.submenu && !collapsed && (
           <div className="mt-1 space-y-1">{item.submenu.map((subItem: any) => renderNavItem(subItem, level + 1))}</div>
         )}
       </div>
@@ -87,15 +90,24 @@ export function Sidebar() {
   }
 
   return (
-    <div className="sidebar-gradient w-64 min-h-screen p-4">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-          <div className="w-6 h-6 bg-blue-600 rounded transform rotate-45"></div>
+    <div className={cn("sidebar-gradient min-h-screen p-4 transition-all duration-300 flex flex-col", collapsed ? "w-20" : "w-64")}> 
+      <div className="flex items-center gap-3 mb-8 justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <div className="w-6 h-6 bg-blue-600 rounded transform rotate-45"></div>
+          </div>
+          {!collapsed && <span className="text-white text-xl font-semibold">Smiley Task</span>}
         </div>
-        <span className="text-white text-xl font-semibold">Smiley Task</span>
+        <button
+          className="text-white p-1 rounded hover:bg-blue-600 transition-colors"
+          onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <Menu className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+        </button>
       </div>
 
-      <nav className="space-y-2">{navigation.map((item) => renderNavItem(item))}</nav>
+      <nav className="space-y-2 flex-1">{navigation.map((item) => renderNavItem(item))}</nav>
     </div>
   )
 }
