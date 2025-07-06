@@ -18,6 +18,7 @@ interface PostContextType {
   posts: Post[]
   addPost: (post: Omit<Post, "id">) => void
   getPost: (id: string) => Post | undefined
+  likePost: (id: string) => void
 }
 
 const PostContext = createContext<PostContextType | undefined>(undefined)
@@ -25,44 +26,44 @@ const PostContext = createContext<PostContextType | undefined>(undefined)
 const initialPosts: Post[] = [
   {
     id: "1",
-    title: "Smart Product Management",
-    image: "/placeholder.svg?height=300&width=400",
+    title: "Mountain Lake",
+    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
     author: "Sagar Panchal",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 10,
+    authorAvatar: "https://randomuser.me/api/portraits/men/32.jpg",
+    likes: 2,
     comments: 3,
     category: "Design",
     status: "Like",
   },
   {
     id: "2",
-    title: "Brand Identity Design",
-    image: "/placeholder.svg?height=300&width=400",
+    title: "City Sunset",
+    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
     author: "John Smith",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 15,
+    authorAvatar: "https://randomuser.me/api/portraits/men/33.jpg",
+    likes: 5,
     comments: 7,
     category: "Branding",
     status: "Like",
   },
   {
     id: "3",
-    title: "Mobile App Interface",
-    image: "/placeholder.svg?height=300&width=400",
+    title: "Forest Path",
+    image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
     author: "Sarah Wilson",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 22,
-    comments: 12,
+    authorAvatar: "https://randomuser.me/api/portraits/women/44.jpg",
+    likes: 1,
+    comments: 2,
     category: "UI/UX",
     status: "Like",
   },
   {
     id: "4",
-    title: "Web Dashboard Design",
-    image: "/placeholder.svg?height=300&width=400",
+    title: "Desert Adventure",
+    image: "https://images.unsplash.com/photo-1519985176271-adb1088fa94c?auto=format&fit=crop&w=400&q=80",
     author: "Mike Johnson",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 8,
+    authorAvatar: "https://randomuser.me/api/portraits/men/45.jpg",
+    likes: 3,
     comments: 4,
     category: "Web Design",
     status: "Like",
@@ -70,44 +71,44 @@ const initialPosts: Post[] = [
   {
     id: "5",
     title: "Product Packaging",
-    image: "/placeholder.svg?height=300&width=400",
+    image: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=400&q=80",
     author: "Emma Davis",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 18,
-    comments: 9,
+    authorAvatar: "https://randomuser.me/api/portraits/women/46.jpg",
+    likes: 0,
+    comments: 1,
     category: "Packaging",
     status: "Like",
   },
   {
     id: "6",
     title: "Logo Design Collection",
-    image: "/placeholder.svg?height=300&width=400",
+    image: "https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=400&q=80",
     author: "Alex Brown",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 25,
-    comments: 15,
+    authorAvatar: "https://randomuser.me/api/portraits/men/47.jpg",
+    likes: 4,
+    comments: 5,
     category: "Logo",
     status: "Like",
   },
   {
     id: "7",
     title: "E-commerce Platform",
-    image: "/placeholder.svg?height=300&width=400",
+    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
     author: "Lisa Chen",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 12,
-    comments: 6,
+    authorAvatar: "https://randomuser.me/api/portraits/women/48.jpg",
+    likes: 2,
+    comments: 2,
     category: "E-commerce",
     status: "Like",
   },
   {
     id: "8",
     title: "Marketing Materials",
-    image: "/placeholder.svg?height=300&width=400",
+    image: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
     author: "David Lee",
-    authorAvatar: "/placeholder.svg?height=40&width=40",
-    likes: 14,
-    comments: 8,
+    authorAvatar: "https://randomuser.me/api/portraits/men/49.jpg",
+    likes: 1,
+    comments: 3,
     category: "Marketing",
     status: "Like",
   },
@@ -128,7 +129,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
     return posts.find((post) => post.id === id)
   }
 
-  return <PostContext.Provider value={{ posts, addPost, getPost }}>{children}</PostContext.Provider>
+  const likePost = (id: string) => {
+    setPosts((prev) => prev.map(post => post.id === id ? { ...post, likes: post.likes + 1 } : post))
+  }
+
+  return <PostContext.Provider value={{ posts, addPost, getPost, likePost }}>{children}</PostContext.Provider>
 }
 
 export function usePosts() {

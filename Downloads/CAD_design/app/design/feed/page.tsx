@@ -1,16 +1,21 @@
 "use client"
 import Link from "next/link"
-import Image from "next/image"
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { usePosts } from "@/contexts/post-context"
-import { Home, Grid3X3, Upload, Bell, User, Heart, MessageCircle } from "lucide-react"
+import { Home, Grid3X3, Upload, Bell, User, Heart, MessageCircle, Share2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 
 export default function FeedPage() {
-  const { posts } = usePosts()
-  const firstPost = posts[0] // Show the first post as featured
+  const { posts, likePost } = usePosts()
+
+  // Share handler (copies image URL to clipboard)
+  const handleShare = (image: string) => {
+    navigator.clipboard.writeText(image)
+    alert("Image URL copied to clipboard!")
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -61,7 +66,7 @@ export default function FeedPage() {
         <Header />
 
         <main className="p-6">
-          <div className="bg-white rounded-2xl p-6 min-h-[calc(100vh-120px)]">
+          <div className="bg-white rounded-2xl p-6 min-h-[calc(100vh-120px)] overflow-y-auto" style={{ maxHeight: 'calc(100vh - 120px)' }}>
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Design</h1>
               <p className="text-gray-600">Your team. Your tasks. One smooth workflow.</p>
@@ -98,41 +103,43 @@ export default function FeedPage() {
               <h2 className="text-xl font-semibold text-gray-900">All Post</h2>
             </div>
 
-            {/* Single large post as shown in third screenshot */}
-            <div className="max-w-2xl">
-              {firstPost && (
-                <div className="bg-gray-50 rounded-lg overflow-hidden">
-                  <div className="aspect-video relative">
-                    <Image
-                      src={firstPost.image || "/placeholder.svg"}
-                      alt={firstPost.title}
-                      fill
-                      className="object-cover"
-                    />
+            {/* Scrollable grid of all posts */}
+            <div className="grid grid-cols-4 gap-6">
+              {posts.map((post) => (
+                <div key={post.id} className="bg-gray-50 rounded-lg overflow-hidden relative group">
+                  <div className="aspect-square relative">
+                    <img src={post.image} alt={post.title} className="object-cover w-full h-full" />
+                    <div className="absolute bottom-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="icon" variant="ghost" onClick={() => likePost(post.id)} aria-label="Like">
+                        <Heart className="w-5 h-5 text-red-500" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => handleShare(post.image)} aria-label="Share">
+                        <Share2 className="w-5 h-5 text-blue-500" />
+                      </Button>
+                    </div>
+                    <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">{post.likes} Likes</span>
                   </div>
-                  <div className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10">
-                          <AvatarImage src={firstPost.authorAvatar || "/placeholder.svg"} />
-                          <AvatarFallback>{firstPost.author.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-gray-900">{firstPost.author}</span>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Avatar className="w-6 h-6">
+                        <AvatarImage src={post.authorAvatar} />
+                        <AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium text-gray-900">{post.author}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <Heart className="w-4 h-4" />
+                        <span>{post.likes}</span>
                       </div>
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-2">
-                          <Heart className="w-5 h-5 text-gray-600" />
-                          <span className="font-medium">{firstPost.likes}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MessageCircle className="w-5 h-5 text-gray-600" />
-                          <span className="font-medium">{firstPost.comments}</span>
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="w-4 h-4" />
+                        <span>{post.comments}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </main>
