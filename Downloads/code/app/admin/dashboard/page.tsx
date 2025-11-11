@@ -1,13 +1,20 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getServices, getGalleryItems } from "@/lib/supabase/rest-api"
+import { getAdminServices, getAdminGalleryItems, getAdminTestimonials, getContactMessages } from "@/lib/supabase/rest-api"
 
 export default async function AdminDashboard() {
-  const [services, gallery] = await Promise.all([getServices(), getGalleryItems()])
+  const [services, gallery, testimonials, messages] = await Promise.all([
+    getAdminServices(),
+    getAdminGalleryItems(),
+    getAdminTestimonials(),
+    getContactMessages(),
+  ])
 
   const servicesCount = services?.length || 0
   const galleryCount = gallery?.length || 0
+  const testimonialsCount = testimonials?.length || 0
+  const messagesCount = messages?.length || 0
 
   return (
     <div className="min-h-screen bg-background">
@@ -15,9 +22,14 @@ export default async function AdminDashboard() {
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <Button asChild variant="outline">
-            <Link href="/">Back to Site</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline">
+              <Link href="/">Back to Site</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/admin/logout">Logout</Link>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -52,6 +64,34 @@ export default async function AdminDashboard() {
             </CardContent>
           </Card>
 
+          {/* Testimonials Management Card */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle>Testimonials</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-2xl font-bold">{testimonialsCount}</p>
+              <p className="text-sm text-muted-foreground">Total video testimonials</p>
+              <Button asChild className="w-full bg-accent hover:bg-accent/90 text-white">
+                <Link href="/admin/testimonials">Manage Testimonials</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Messages Card */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle>Messages</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-2xl font-bold">{messagesCount}</p>
+              <p className="text-sm text-muted-foreground">Contact form messages</p>
+              <Button asChild className="w-full bg-accent hover:bg-accent/90 text-white">
+                <Link href="/admin/messages">View Messages</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Homepage Content Card */}
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
@@ -72,12 +112,18 @@ export default async function AdminDashboard() {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <Button asChild variant="outline">
                 <Link href="/admin/services/new">Add New Service</Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/admin/gallery/new">Add Gallery Item</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/admin/testimonials/new">Add Testimonial</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/admin/messages">View Messages</Link>
               </Button>
             </div>
           </CardContent>

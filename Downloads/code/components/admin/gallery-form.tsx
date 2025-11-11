@@ -1,73 +1,62 @@
 "use client"
 
 import type React from "react"
-
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { addGalleryItem, updateGalleryItem } from "@/lib/actions/gallery"
+import { toast } from "sonner"
+import Image from "next/image"
 
 interface GalleryItem {
   id: string
-  title: string
-  description?: string
   image_url: string
-  before_image_url?: string
-  category: string
-  order_index: number
+  caption?: string
 }
 
 export function GalleryForm({ item }: { item?: GalleryItem }) {
-  const [title, setTitle] = useState(item?.title || "")
-  const [description, setDescription] = useState(item?.description || "")
-  const [imageUrl, setImageUrl] = useState(item?.image_url || "")
-  const [beforeImageUrl, setBeforeImageUrl] = useState(item?.before_image_url || "")
-  const [category, setCategory] = useState(item?.category || "general")
-  const [orderIndex, setOrderIndex] = useState(item?.order_index || 0)
+  const [caption, setCaption] = useState(item?.caption || "")
+  const [imagePreview, setImagePreview] = useState<string | null>(item?.image_url || null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
     try {
+      const formData = new FormData(e.currentTarget)
+      
       if (item) {
-        const { error } = await supabase
-          .from("gallery")
-          .update({
-            title,
-            description,
-            image_url: imageUrl,
-            before_image_url: beforeImageUrl,
-            category,
-            order_index: orderIndex,
-            updated_at: new Date(),
-          })
-          .eq("id", item.id)
-
-        if (error) throw error
+        await updateGalleryItem(item.id, formData)
+        toast.success("Gallery item updated successfully")
       } else {
-        const { error } = await supabase.from("gallery").insert({
-          title,
-          description,
-          image_url: imageUrl,
-          before_image_url: beforeImageUrl,
-          category,
-          order_index: orderIndex,
-        })
-
-        if (error) throw error
+        await addGalleryItem(formData)
+        toast.success("Gallery item added successfully")
       }
 
       router.push("/admin/gallery")
+      router.refresh()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      const errorMessage = err instanceof Error ? err.message : "An error occurred"
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -76,74 +65,43 @@ export function GalleryForm({ item }: { item?: GalleryItem }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <Label htmlFor="title">Gallery Item Title</Label>
+        <Label htmlFor="image">Image *</Label>
         <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g., Modern Kitchen Transformation"
-          required
+          id="image"
+          name="image"
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="cursor-pointer"
+          required={!item}
         />
-      </div>
-
-      <div>
-        <Label htmlFor="description">Description (optional)</Label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe this project..."
-          className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="imageUrl">Image URL (After)</Label>
-        <Input
-          id="imageUrl"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://example.com/after-image.jpg"
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="beforeImageUrl">Before Image URL (optional)</Label>
-        <Input
-          id="beforeImageUrl"
-          value={beforeImageUrl}
-          onChange={(e) => setBeforeImageUrl(e.target.value)}
-          placeholder="https://example.com/before-image.jpg"
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          If provided, this will show as a before/after slider in the services page
+        {item?.image_url && (
+          <input type="hidden" name="existingImageUrl" value={item.image_url} />
+        )}
+        {imagePreview && (
+          <div className="mt-4 relative w-full max-w-md h-64 border rounded-lg overflow-hidden">
+            <Image
+              src={imagePreview}
+              alt="Preview"
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
+        <p className="text-sm text-muted-foreground mt-2">
+          Upload an image for the gallery. Recommended: 1200x800px or larger.
         </p>
       </div>
 
       <div>
-        <Label htmlFor="category">Category</Label>
-        <select
-          id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-        >
-          <option value="general">General</option>
-          <option value="kitchen">Kitchen</option>
-          <option value="bathroom">Bathroom</option>
-          <option value="landscaping">Landscaping</option>
-          <option value="before-after">Before/After Slider</option>
-        </select>
-      </div>
-
-      <div>
-        <Label htmlFor="orderIndex">Display Order</Label>
-        <Input
-          id="orderIndex"
-          type="number"
-          value={orderIndex}
-          onChange={(e) => setOrderIndex(Number.parseInt(e.target.value))}
+        <Label htmlFor="caption">Caption (optional)</Label>
+        <Textarea
+          id="caption"
+          name="caption"
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+          placeholder="Add a caption for this image..."
+          className="min-h-24"
         />
       </div>
 
@@ -151,7 +109,7 @@ export function GalleryForm({ item }: { item?: GalleryItem }) {
 
       <div className="flex gap-4">
         <Button type="submit" className="bg-accent hover:bg-accent/90 text-white" disabled={isLoading}>
-          {isLoading ? "Saving..." : item ? "Update Item" : "Create Item"}
+          {isLoading ? "Saving..." : item ? "Update Gallery Item" : "Add Gallery Item"}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancel

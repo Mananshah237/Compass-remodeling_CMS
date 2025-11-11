@@ -2,10 +2,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { DeleteServiceButton } from "@/components/admin/delete-service-button"
-import { getServices } from "@/lib/supabase/rest-api"
+import { getAdminServices } from "@/lib/supabase/rest-api"
 
 export default async function AdminServicesPage() {
-  const services = await getServices()
+  const services = await getAdminServices()
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +28,16 @@ export default async function AdminServicesPage() {
           <div className="space-y-4">
             {services.map((service: any) => (
               <Card key={service.id}>
-                <CardContent className="pt-6 flex items-center justify-between">
+                <CardContent className="pt-6 flex items-center justify-between gap-6">
+                  {service.image_url && (
+                    <div className="relative w-24 h-24 flex-shrink-0">
+                      <img
+                        src={service.image_url}
+                        alt={service.title}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{service.title}</h3>
                     <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>

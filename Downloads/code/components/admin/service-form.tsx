@@ -6,57 +6,58 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { addService, updateService } from "@/lib/actions/services"
+import { toast } from "sonner"
+import Image from "next/image"
 
 interface Service {
   id: string
   title: string
   description: string
-  icon?: string
   image_url?: string
-  order_index: number
 }
 
 export function ServiceForm({ service }: { service?: Service }) {
   const [title, setTitle] = useState(service?.title || "")
   const [description, setDescription] = useState(service?.description || "")
-  const [imageUrl, setImageUrl] = useState(service?.image_url || "")
-  const [orderIndex, setOrderIndex] = useState(service?.order_index || 0)
+  const [imagePreview, setImagePreview] = useState<string | null>(service?.image_url || null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
     try {
-      const {
-        default: { updateService, createService },
-      } = await import("@/lib/supabase/db-client")
-
+      const formData = new FormData(e.currentTarget)
+      
       if (service) {
-        const { error } = await updateService(service.id, {
-          title,
-          description,
-          image_url: imageUrl,
-          order_index: orderIndex,
-          updated_at: new Date(),
-        })
-        if (error) throw error
+        await updateService(service.id, formData)
+        toast.success("Service updated successfully")
       } else {
-        const { error } = await createService({
-          title,
-          description,
-          image_url: imageUrl,
-          order_index: orderIndex,
-        })
-        if (error) throw error
+        await addService(formData)
+        toast.success("Service created successfully")
       }
 
       router.push("/admin/services")
+      router.refresh()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred")
+      const errorMessage = err instanceof Error ? err.message : "An error occurred"
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -65,9 +66,10 @@ export function ServiceForm({ service }: { service?: Service }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <Label htmlFor="title">Service Title</Label>
+        <Label htmlFor="title">Service Title *</Label>
         <Input
           id="title"
+          name="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g., Kitchen Remodeling"
@@ -76,9 +78,10 @@ export function ServiceForm({ service }: { service?: Service }) {
       </div>
 
       <div>
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">Description *</Label>
         <textarea
           id="description"
+          name="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Describe this service..."
@@ -88,23 +91,31 @@ export function ServiceForm({ service }: { service?: Service }) {
       </div>
 
       <div>
-        <Label htmlFor="imageUrl">Image URL</Label>
+        <Label htmlFor="image">Image</Label>
         <Input
-          id="imageUrl"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://example.com/image.jpg"
+          id="image"
+          name="image"
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="cursor-pointer"
         />
-      </div>
-
-      <div>
-        <Label htmlFor="orderIndex">Display Order</Label>
-        <Input
-          id="orderIndex"
-          type="number"
-          value={orderIndex}
-          onChange={(e) => setOrderIndex(Number.parseInt(e.target.value))}
-        />
+        {service?.image_url && (
+          <input type="hidden" name="existingImageUrl" value={service.image_url} />
+        )}
+        {imagePreview && (
+          <div className="mt-4 relative w-64 h-48 border rounded-lg overflow-hidden">
+            <Image
+              src={imagePreview}
+              alt="Preview"
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
+        <p className="text-sm text-muted-foreground mt-2">
+          Upload an image for this service. Recommended: 800x600px or larger.
+        </p>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

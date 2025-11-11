@@ -1,20 +1,7 @@
 import { notFound } from "next/navigation"
 import { ServiceForm } from "@/components/admin/service-form"
 import { Card, CardContent } from "@/components/ui/card"
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/rest-api"
-
-async function getServiceById(id: string) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/services?id=eq.${id}`, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      "Content-Type": "application/json",
-    },
-  })
-
-  if (!response.ok) return null
-  const data = await response.json()
-  return data[0] || null
-}
+import { getAdminServiceById } from "@/lib/supabase/rest-api"
 
 export default async function EditServicePage({
   params,
@@ -22,7 +9,7 @@ export default async function EditServicePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const service = await getServiceById(id)
+  const service = await getAdminServiceById(id)
 
   if (!service) {
     notFound()

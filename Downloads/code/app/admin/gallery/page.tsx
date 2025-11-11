@@ -2,10 +2,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { DeleteGalleryButton } from "@/components/admin/delete-gallery-button"
-import { getGalleryItems } from "@/lib/supabase/rest-api"
+import { getAdminGalleryItems } from "@/lib/supabase/rest-api"
 
 export default async function AdminGalleryPage() {
-  const galleryItems = await getGalleryItems()
+  const galleryItems = await getAdminGalleryItems()
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,16 +33,17 @@ export default async function AdminGalleryPage() {
                     <div className="relative w-24 h-24 flex-shrink-0">
                       <img
                         src={item.image_url || "/placeholder.svg"}
-                        alt={item.title}
+                        alt={item.caption || "Gallery image"}
                         className="w-full h-full object-cover rounded"
                       />
                     </div>
                   )}
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.category}</p>
-                    {item.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-2">{item.description}</p>
+                    {item.caption && (
+                      <p className="text-sm text-muted-foreground">{item.caption}</p>
+                    )}
+                    {!item.caption && (
+                      <p className="text-sm text-muted-foreground italic">No caption</p>
                     )}
                   </div>
                   <div className="flex gap-2">

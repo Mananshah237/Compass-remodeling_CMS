@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { supabase } from "@/lib/supabase/client"
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("")
@@ -21,13 +22,16 @@ export default function AdminLoginPage() {
     setError(null)
 
     try {
-      const { signIn } = await import("@/lib/supabase/auth")
-      const { data, error: signInError } = await signIn(email, password)
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
       if (signInError) throw signInError
       if (!data.user) throw new Error("Login failed")
 
-      router.push("/admin/dashboard")
+      // Redirect to dashboard
+      window.location.href = "/admin/dashboard"
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

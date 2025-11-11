@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/lib/supabase/client"
 
 export function ContactForm() {
   const { toast } = useToast()
@@ -17,16 +18,32 @@ export function ContactForm() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      const formData = new FormData(e.currentTarget)
+      const { error } = await supabase.from("contact_messages").insert({
+        name: String(formData.get("name")),
+        email: String(formData.get("email")),
+        phone: String(formData.get("phone") || "") || null,
+        message: String(formData.get("message")),
+      })
 
-    toast({
-      title: "Message sent!",
-      description: "We'll get back to you as soon as possible.",
-    })
+      if (error) throw error
 
-    setIsSubmitting(false)
-    ;(e.target as HTMLFormElement).reset()
+      toast({
+        title: "Message sent!",
+        description: "We'll get back to you as soon as possible.",
+      })
+
+      ;(e.target as HTMLFormElement).reset()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send message. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

@@ -14,10 +14,10 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { deleteGalleryItem } from "@/lib/actions/gallery"
+import { deleteMessage } from "@/lib/actions/messages"
 import { toast } from "sonner"
 
-export function DeleteGalleryButton({ id }: { id: string }) {
+export function DeleteMessageButton({ id }: { id: string }) {
   const [isLoading, setIsLoading] = useState(false)
   const [open, setOpen] = useState(false)
   const router = useRouter()
@@ -25,12 +25,12 @@ export function DeleteGalleryButton({ id }: { id: string }) {
   const handleDelete = async () => {
     setIsLoading(true)
     try {
-      await deleteGalleryItem(id)
-      toast.success("Gallery item deleted successfully")
+      await deleteMessage(id)
+      toast.success("Message deleted successfully")
       router.refresh()
       setOpen(false)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete gallery item"
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete message"
       toast.error(errorMessage)
     } finally {
       setIsLoading(false)
@@ -48,7 +48,7 @@ export function DeleteGalleryButton({ id }: { id: string }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete this gallery item and remove it from your website.
+            This action cannot be undone. This will permanently delete this message.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -61,3 +61,4 @@ export function DeleteGalleryButton({ id }: { id: string }) {
     </AlertDialog>
   )
 }
+

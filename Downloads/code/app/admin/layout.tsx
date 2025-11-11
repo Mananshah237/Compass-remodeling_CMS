@@ -1,10 +1,11 @@
 import type React from "react"
-import { AdminAuthGuard } from "@/components/admin/auth-guard"
 
+// Admin layout - middleware handles auth protection
+// No need for client-side auth guard since middleware redirects unauthenticated users
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <AdminAuthGuard>{children}</AdminAuthGuard>
+  return <>{children}</>
 }

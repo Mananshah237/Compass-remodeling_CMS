@@ -1,17 +1,17 @@
 import { notFound } from "next/navigation"
-import { GalleryForm } from "@/components/admin/gallery-form"
+import { TestimonialForm } from "@/components/admin/testimonial-form"
 import { Card, CardContent } from "@/components/ui/card"
-import { getAdminGalleryItemById } from "@/lib/supabase/rest-api"
+import { getAdminTestimonialById } from "@/lib/supabase/rest-api"
 
-export default async function EditGalleryPage({
+export default async function EditTestimonialPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const galleryItem = await getAdminGalleryItemById(id)
+  const testimonial = await getAdminTestimonialById(id)
 
-  if (!galleryItem) {
+  if (!testimonial) {
     notFound()
   }
 
@@ -19,17 +19,18 @@ export default async function EditGalleryPage({
     <div className="min-h-screen bg-background">
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-3xl font-bold">Edit Gallery Item</h1>
+          <h1 className="text-3xl font-bold">Edit Testimonial</h1>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         <Card>
           <CardContent className="pt-6">
-            <GalleryForm item={galleryItem} />
+            <TestimonialForm testimonial={testimonial} />
           </CardContent>
         </Card>
       </div>
     </div>
   )
 }
+
