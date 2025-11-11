@@ -1,6 +1,7 @@
 "use server"
 
 import { supabaseAdmin } from "@/lib/supabase/server-client"
+import { STORAGE_BUCKET, getBucketPath } from "@/lib/supabase/config"
 import { revalidatePath } from "next/cache"
 
 export async function addService(data: FormData) {
@@ -11,11 +12,27 @@ export async function addService(data: FormData) {
   let image_url: string | null = null
 
   if (file && file.size > 0) {
-    const path = `services/${crypto.randomUUID()}-${file.name}`
-    const { error: upErr } = await supabaseAdmin.storage.from("media").upload(path, file)
+    const path = getBucketPath("services", `${crypto.randomUUID()}-${file.name}`)
+    // Try uploading; if the storage bucket doesn't exist, attempt to create it
+    let { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file)
+
+    if (upErr) {
+      const code = (upErr as any).status || (upErr as any).statusCode || null
+      // If bucket not found, try to create it (requires service role key)
+      if (code === 404 || String(code) === "404") {
+        const { error: createErr } = await supabaseAdmin.storage.createBucket(STORAGE_BUCKET, { public: true })
+        if (createErr) {
+          throw new Error(`Failed to create storage bucket 'media': ${createErr.message}`)
+        }
+
+        // Retry upload once
+        ;({ error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file))
+      }
+    }
+
     if (upErr) throw upErr
 
-    const { data: publicUrl } = supabaseAdmin.storage.from("media").getPublicUrl(path)
+    const { data: publicUrl } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(path)
     image_url = publicUrl.publicUrl
   }
 

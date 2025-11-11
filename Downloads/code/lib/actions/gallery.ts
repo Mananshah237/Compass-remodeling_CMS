@@ -2,6 +2,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/server-client"
 import { revalidatePath } from "next/cache"
+import { STORAGE_BUCKET, getBucketPath } from "@/lib/supabase/config"
 
 export async function addGalleryItem(data: FormData) {
   const caption = String(data.get("caption") || "")
@@ -11,8 +12,23 @@ export async function addGalleryItem(data: FormData) {
     throw new Error("Image is required")
   }
 
-  const path = `gallery/${crypto.randomUUID()}-${file.name}`
-  const { error: upErr } = await supabaseAdmin.storage.from("media").upload(path, file)
+  const path = getBucketPath("gallery", `${crypto.randomUUID()}-${file.name}`)
+  // Try uploading; if the storage bucket doesn't exist, attempt to create it
+  let { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file)
+
+  if (upErr) {
+    const code = (upErr as any).status || (upErr as any).statusCode || null
+    if (code === 404 || String(code) === "404") {
+      const { error: createErr } = await supabaseAdmin.storage.createBucket(STORAGE_BUCKET, { public: true })
+      if (createErr) {
+        throw new Error(`Failed to create storage bucket '${STORAGE_BUCKET}': ${createErr.message}`)
+      }
+
+      // Retry upload once
+      ;({ error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file))
+    }
+  }
+
   if (upErr) throw upErr
 
   const { data: publicUrl } = supabaseAdmin.storage.from("media").getPublicUrl(path)
