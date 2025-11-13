@@ -14,7 +14,10 @@ export async function addService(data: FormData) {
   if (file && file.size > 0) {
     const path = getBucketPath("services", `${crypto.randomUUID()}-${file.name}`)
     // Try uploading; if the storage bucket doesn't exist, attempt to create it
-    let { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file)
+    let { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
+      contentType: file.type,
+      upsert: false
+    })
 
     if (upErr) {
       const code = (upErr as any).status || (upErr as any).statusCode || null
@@ -22,11 +25,14 @@ export async function addService(data: FormData) {
       if (code === 404 || String(code) === "404") {
         const { error: createErr } = await supabaseAdmin.storage.createBucket(STORAGE_BUCKET, { public: true })
         if (createErr) {
-          throw new Error(`Failed to create storage bucket 'media': ${createErr.message}`)
+          throw new Error(`Failed to create storage bucket '${STORAGE_BUCKET}': ${createErr.message}`)
         }
 
         // Retry upload once
-        ;({ error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file))
+        ;({ error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
+          contentType: file.type,
+          upsert: false
+        }))
       }
     }
 
@@ -55,14 +61,17 @@ export async function updateService(id: string, data: FormData) {
     // Delete old image if exists
     if (existingImageUrl) {
       const oldPath = existingImageUrl.split("/").slice(-2).join("/")
-      await supabaseAdmin.storage.from("media").remove([oldPath])
+      await supabaseAdmin.storage.from(STORAGE_BUCKET).remove([oldPath])
     }
 
-    const path = `services/${crypto.randomUUID()}-${file.name}`
-    const { error: upErr } = await supabaseAdmin.storage.from("media").upload(path, file)
+    const path = getBucketPath("services", `${crypto.randomUUID()}-${file.name}`)
+    const { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
+      contentType: file.type,
+      upsert: false
+    })
     if (upErr) throw upErr
 
-    const { data: publicUrl } = supabaseAdmin.storage.from("media").getPublicUrl(path)
+    const { data: publicUrl } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(path)
     image_url = publicUrl.publicUrl
   }
 
@@ -79,7 +88,7 @@ export async function deleteService(id: string) {
   
   if (service?.image_url) {
     const path = service.image_url.split("/").slice(-2).join("/")
-    await supabaseAdmin.storage.from("media").remove([path])
+    await supabaseAdmin.storage.from(STORAGE_BUCKET).remove([path])
   }
 
   const { error } = await supabaseAdmin.from("services").delete().eq("id", id)

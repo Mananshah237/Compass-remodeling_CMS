@@ -14,7 +14,10 @@ export async function addGalleryItem(data: FormData) {
 
   const path = getBucketPath("gallery", `${crypto.randomUUID()}-${file.name}`)
   // Try uploading; if the storage bucket doesn't exist, attempt to create it
-  let { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file)
+  let { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
+    contentType: file.type,
+    upsert: false
+  })
 
   if (upErr) {
     const code = (upErr as any).status || (upErr as any).statusCode || null
@@ -25,13 +28,16 @@ export async function addGalleryItem(data: FormData) {
       }
 
       // Retry upload once
-      ;({ error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file))
+      ;({ error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
+        contentType: file.type,
+        upsert: false
+      }))
     }
   }
 
   if (upErr) throw upErr
 
-  const { data: publicUrl } = supabaseAdmin.storage.from("media").getPublicUrl(path)
+  const { data: publicUrl } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(path)
   const image_url = publicUrl.publicUrl
 
   const { error } = await supabaseAdmin.from("gallery").insert({ image_url, caption })
@@ -52,14 +58,17 @@ export async function updateGalleryItem(id: string, data: FormData) {
     // Delete old image if exists
     if (existingImageUrl) {
       const oldPath = existingImageUrl.split("/").slice(-2).join("/")
-      await supabaseAdmin.storage.from("media").remove([oldPath])
+      await supabaseAdmin.storage.from(STORAGE_BUCKET).remove([oldPath])
     }
 
-    const path = `gallery/${crypto.randomUUID()}-${file.name}`
-    const { error: upErr } = await supabaseAdmin.storage.from("media").upload(path, file)
+    const path = getBucketPath("gallery", `${crypto.randomUUID()}-${file.name}`)
+    const { error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
+      contentType: file.type,
+      upsert: false
+    })
     if (upErr) throw upErr
 
-    const { data: publicUrl } = supabaseAdmin.storage.from("media").getPublicUrl(path)
+    const { data: publicUrl } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(path)
     image_url = publicUrl.publicUrl
   }
 
@@ -76,7 +85,7 @@ export async function deleteGalleryItem(id: string) {
   
   if (item?.image_url) {
     const path = item.image_url.split("/").slice(-2).join("/")
-    await supabaseAdmin.storage.from("media").remove([path])
+    await supabaseAdmin.storage.from(STORAGE_BUCKET).remove([path])
   }
 
   const { error } = await supabaseAdmin.from("gallery").delete().eq("id", id)
