@@ -12,8 +12,8 @@ export default function ContactPage() {
     {
       icon: Phone,
       title: "Phone",
-      content: "(555) 123-4567",
-      link: "tel:5551234567",
+      content: "(214)621-3033",
+      link: "tel:2146213033",
     },
     {
       icon: Mail,
@@ -24,7 +24,7 @@ export default function ContactPage() {
     {
       icon: MapPin,
       title: "Address",
-      content: "123 Main Street, Your City, ST 12345",
+      content: "1800 Jay Circle #A, Arlington, TX 76012",
       link: "https://maps.google.com",
     },
     {
@@ -106,8 +106,8 @@ export default function ContactPage() {
             >
               <h2 className="font-serif text-3xl md:text-4xl font-bold text-primary mb-6">Visit Our Office</h2>
               <div className="w-full h-[calc(100%-4rem)] rounded-lg overflow-hidden shadow-lg">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2412648718453!2d-73.98784368459395!3d40.74844097932847!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c259a9b3117469%3A0xd134e199a405a163!2sEmpire%20State%20Building!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus"
+              <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3368.9230944657687!2d-97.14149672483028!3d32.74846828712655!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864e7d44cb5b6977%3A0x48ee3ae7ddc5a352!2s1800%20Jay%20Cir%20A%2C%20Arlington%2C%20TX%2076012!5e0!3m2!1sen!2sus!4v1731379489234!5m2!1sen!2sus"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -116,6 +116,7 @@ export default function ContactPage() {
                   referrerPolicy="no-referrer-when-downgrade"
                   title="Office Location"
                 />
+                            
               </div>
             </motion.div>
           </div>

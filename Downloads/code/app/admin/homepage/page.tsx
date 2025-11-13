@@ -1,18 +1,16 @@
 import { HomepageForm } from "@/components/admin/homepage-form"
 import { Card, CardContent } from "@/components/ui/card"
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/rest-api"
+import { supabaseServer } from "@/lib/supabase/server-client"
 
 async function getHomepageContent() {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/homepage_content`, {
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      "Content-Type": "application/json",
-    },
-  })
+  const { data, error } = await supabaseServer
+    .from("homepage_content")
+    .select("*")
+    .limit(1)
+    .single()
 
-  if (!response.ok) return null
-  const data = await response.json()
-  return data[0] || null
+  if (error || !data) return null
+  return data
 }
 
 export default async function AdminHomepagePage() {

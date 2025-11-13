@@ -55,7 +55,7 @@ export function Navbar() {
               alt="Compass Remodeling & Maintenance"
               width={280}
               height={60}
-              className="h-12 w-auto transition-transform group-hover:scale-105 object-left object-cover"
+              className="h-16 w-auto transition-transform group-hover:scale-105 object-left object-cover"
               style={{ objectPosition: "0% 50%", maxWidth: "380px" }}
               priority
             />

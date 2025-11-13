@@ -15,7 +15,7 @@ export function Footer() {
                 alt="Compass Remodeling & Maintenance"
                 width={240}
                 height={52}
-                className="h-10 w-auto object-left object-cover bg-white/10 p-2 rounded"
+                className="h-16 w-auto object-left object-cover bg-white/10 p-2 rounded"
                 style={{ objectPosition: "0% 50%", maxWidth: "320px" }}
               />
             </div>
@@ -67,9 +67,10 @@ export function Footer() {
           <div>
             <h4 className="font-serif text-xl font-bold mb-6">Contact Us</h4>
             <ul className="space-y-4">
+              
               <li className="flex items-start gap-3">
                 <Phone className="w-5 h-5 text-accent mt-1 flex-shrink-0" />
-                <span className="text-white/80">(555) 123-4567</span>
+                <span className="text-white/80">(214) 923-8658 <br /> (214) 621-3033</span>
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-accent mt-1 flex-shrink-0" />
@@ -77,7 +78,7 @@ export function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-accent mt-1 flex-shrink-0" />
-                <span className="text-white/80">123 Main Street, Your City, ST 12345</span>
+                <span className="text-white/80">1800 Jay Circle #A, Arlington, TX 76012</span>
               </li>
             </ul>
           </div>
