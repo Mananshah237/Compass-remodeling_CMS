@@ -31,20 +31,18 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // IMPORTANT: Avoid writing any logic between createServerClient and
+  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
+  // issues with users being randomly logged out.
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    // Allow login page
-    if (request.nextUrl.pathname === "/admin/login") {
-      return response;
-    }
-
-    // Redirect to login if no user
-    if (!user) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
+  if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/login")) {
+      if (!user) {
+          return NextResponse.redirect(new URL("/admin/login", request.url));
+      }
   }
 
   return response;
