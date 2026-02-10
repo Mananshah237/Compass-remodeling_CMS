@@ -2,6 +2,13 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  // BYPASS AUTH FOR SERVER ACTIONS (POST requests)
+  // We handle auth verification inside the Server Actions themselves.
+  // This prevents the middleware from blocking valid action requests due to cookie sync issues.
+  if (request.method === "POST") {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -30,10 +37,6 @@ export async function middleware(request: NextRequest) {
       },
     }
   );
-
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
 
   const {
     data: { user },
