@@ -10,13 +10,6 @@ Follow these steps to set up the Compass Remodeling CMS.
 
 ## Step 1: Environment Variables
 
-Create a `.env.local` file in the project root with the following variables:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://schnzffjxxkjqunjnemn.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_lVdlIV_vxEmEhi1CcnufsA_bH2Al5bU
-SUPABASE_SERVICE_ROLE_KEY=sb_secret_mpq87pT6tkax7bZ85Uhhlg_Mwf9GxG-
-```
 
 **Important:** 
 - Never commit `.env.local` to git

@@ -14,7 +14,10 @@ export async function addService(data: FormData) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
   if (authError || !user) {
-    console.error("Auth failed in addService:", authError);
+    console.error("AUTH CHECK FAILED in addService:");
+    console.error("- User:", user ? "Found (ID: " + user.id + ")" : "NULL");
+    console.error("- Error:", authError);
+    // Log headers/cookies if possible (redacted) to see if they exist
     redirect("/admin/login");
   }
 
