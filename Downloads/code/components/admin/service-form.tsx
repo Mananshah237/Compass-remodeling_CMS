@@ -43,17 +43,23 @@ export function ServiceForm({ service }: { service?: Service }) {
 
     try {
       const formData = new FormData(e.currentTarget)
-      
+
+      let result
+
       // If updating, we need to pass the ID separately
       if (service) {
         // updateService signature: (id: string, data: FormData)
-        await updateService(service.id, formData)
-        toast.success("Service updated successfully")
+        result = await updateService(service.id, formData)
       } else {
         // addService signature: (data: FormData)
-        await addService(formData)
-        toast.success("Service created successfully")
+        result = await addService(formData)
       }
+
+      if (result?.error) {
+        throw new Error(result.error)
+      }
+
+      toast.success(service ? "Service updated successfully" : "Service created successfully")
 
       router.push("/admin/services")
       router.refresh()

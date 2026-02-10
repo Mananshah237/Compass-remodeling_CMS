@@ -29,14 +29,20 @@ export function TestimonialForm({ testimonial }: { testimonial?: Testimonial }) 
 
     try {
       const formData = new FormData(e.currentTarget)
-      
+
+      let result
+
       if (testimonial) {
-        await updateTestimonial(testimonial.id, formData)
-        toast.success("Testimonial updated successfully")
+        result = await updateTestimonial(testimonial.id, formData)
       } else {
-        await addTestimonial(formData)
-        toast.success("Testimonial added successfully")
+        result = await addTestimonial(formData)
       }
+
+      if (result?.error) {
+        throw new Error(result.error)
+      }
+
+      toast.success(testimonial ? "Testimonial updated successfully" : "Testimonial added successfully")
 
       router.push("/admin/testimonials")
       router.refresh()

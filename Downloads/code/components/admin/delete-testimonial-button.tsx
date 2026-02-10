@@ -25,7 +25,8 @@ export function DeleteTestimonialButton({ id }: { id: string }) {
   const handleDelete = async () => {
     setIsLoading(true)
     try {
-      await deleteTestimonial(id)
+      const result = await deleteTestimonial(id)
+      if (result?.error) throw new Error(result.error)
       toast.success("Testimonial deleted successfully")
       router.refresh()
       setOpen(false)

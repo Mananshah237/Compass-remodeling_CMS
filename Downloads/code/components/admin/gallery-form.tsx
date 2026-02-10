@@ -42,14 +42,20 @@ export function GalleryForm({ item }: { item?: GalleryItem }) {
 
     try {
       const formData = new FormData(e.currentTarget)
-      
+
+      let result
+
       if (item) {
-        await updateGalleryItem(item.id, formData)
-        toast.success("Gallery item updated successfully")
+        result = await updateGalleryItem(item.id, formData)
       } else {
-        await addGalleryItem(formData)
-        toast.success("Gallery item added successfully")
+        result = await addGalleryItem(formData)
       }
+
+      if (result?.error) {
+        throw new Error(result.error)
+      }
+
+      toast.success(item ? "Gallery item updated successfully" : "Gallery item added successfully")
 
       router.push("/admin/gallery")
       router.refresh()

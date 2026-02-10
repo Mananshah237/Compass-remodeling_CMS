@@ -25,7 +25,8 @@ export function DeleteServiceButton({ id }: { id: string }) {
   const handleDelete = async () => {
     setIsLoading(true)
     try {
-      await deleteService(id)
+      const result = await deleteService(id)
+      if (result?.error) throw new Error(result.error)
       toast.success("Service deleted successfully")
       router.refresh()
       setOpen(false)

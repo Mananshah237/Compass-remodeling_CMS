@@ -2,40 +2,68 @@
 
 import { supabaseAdmin } from "@/lib/supabase/server-client"
 import { revalidatePath } from "next/cache"
+import { checkAuth } from "@/lib/supabase/check-auth"
 
 export async function addTestimonial(data: FormData) {
-  const client_name = String(data.get("client_name") || "")
-  const video_url = String(data.get("video_url"))
+  try {
+    await checkAuth()
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Server Misconfiguration: SUPABASE_SERVICE_ROLE_KEY is missing")
 
-  if (!video_url) {
-    throw new Error("Video URL is required")
+    const client_name = String(data.get("client_name") || "")
+    const video_url = String(data.get("video_url"))
+
+    if (!video_url) {
+      throw new Error("Video URL is required")
+    }
+
+    const { error } = await supabaseAdmin.from("testimonials").insert({ client_name, video_url })
+    if (error) throw error
+
+    revalidatePath("/admin/testimonials")
+    // Revalidate testimonials page if you have one
+    return { success: true }
+  } catch (error) {
+    console.error("Error in addTestimonial:", error)
+    return { error: error instanceof Error ? error.message : "Failed to add testimonial" }
   }
-
-  const { error } = await supabaseAdmin.from("testimonials").insert({ client_name, video_url })
-  if (error) throw error
-
-  revalidatePath("/admin/testimonials")
-  // Revalidate testimonials page if you have one
 }
 
 export async function updateTestimonial(id: string, data: FormData) {
-  const client_name = String(data.get("client_name") || "")
-  const video_url = String(data.get("video_url"))
+  try {
+    await checkAuth()
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Server Misconfiguration: SUPABASE_SERVICE_ROLE_KEY is missing")
 
-  if (!video_url) {
-    throw new Error("Video URL is required")
+    const client_name = String(data.get("client_name") || "")
+    const video_url = String(data.get("video_url"))
+
+    if (!video_url) {
+      throw new Error("Video URL is required")
+    }
+
+    const { error } = await supabaseAdmin.from("testimonials").update({ client_name, video_url }).eq("id", id)
+    if (error) throw error
+
+    revalidatePath("/admin/testimonials")
+    return { success: true }
+  } catch (error) {
+    console.error("Error in updateTestimonial:", error)
+    return { error: error instanceof Error ? error.message : "Failed to update testimonial" }
   }
-
-  const { error } = await supabaseAdmin.from("testimonials").update({ client_name, video_url }).eq("id", id)
-  if (error) throw error
-
-  revalidatePath("/admin/testimonials")
 }
 
 export async function deleteTestimonial(id: string) {
-  const { error } = await supabaseAdmin.from("testimonials").delete().eq("id", id)
-  if (error) throw error
+  try {
+    await checkAuth()
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error("Server Misconfiguration: SUPABASE_SERVICE_ROLE_KEY is missing")
 
-  revalidatePath("/admin/testimonials")
+    const { error } = await supabaseAdmin.from("testimonials").delete().eq("id", id)
+    if (error) throw error
+
+    revalidatePath("/admin/testimonials")
+    return { success: true }
+  } catch (error) {
+    console.error("Error in deleteTestimonial:", error)
+    return { error: error instanceof Error ? error.message : "Failed to delete testimonial" }
+  }
 }
 

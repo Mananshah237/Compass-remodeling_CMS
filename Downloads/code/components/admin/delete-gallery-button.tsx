@@ -25,7 +25,8 @@ export function DeleteGalleryButton({ id }: { id: string }) {
   const handleDelete = async () => {
     setIsLoading(true)
     try {
-      await deleteGalleryItem(id)
+      const result = await deleteGalleryItem(id)
+      if (result?.error) throw new Error(result.error)
       toast.success("Gallery item deleted successfully")
       router.refresh()
       setOpen(false)
