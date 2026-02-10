@@ -44,10 +44,13 @@ export function ServiceForm({ service }: { service?: Service }) {
     try {
       const formData = new FormData(e.currentTarget)
       
+      // If updating, we need to pass the ID separately
       if (service) {
+        // updateService signature: (id: string, data: FormData)
         await updateService(service.id, formData)
         toast.success("Service updated successfully")
       } else {
+        // addService signature: (data: FormData)
         await addService(formData)
         toast.success("Service created successfully")
       }
@@ -55,7 +58,8 @@ export function ServiceForm({ service }: { service?: Service }) {
       router.push("/admin/services")
       router.refresh()
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "An error occurred"
+      console.error("Submission error:", err)
+      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred"
       setError(errorMessage)
       toast.error(errorMessage)
     } finally {

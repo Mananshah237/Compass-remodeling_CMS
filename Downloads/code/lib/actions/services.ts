@@ -25,25 +25,32 @@ export async function addService(data: FormData) {
       if (code === 404 || String(code) === "404") {
         const { error: createErr } = await supabaseAdmin.storage.createBucket(STORAGE_BUCKET, { public: true })
         if (createErr) {
-          throw new Error(`Failed to create storage bucket '${STORAGE_BUCKET}': ${createErr.message}`)
+          console.error("Failed to create bucket:", createErr)
+        } else {
+            // Retry upload once
+            const retry = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
+              contentType: file.type,
+              upsert: false
+            })
+            upErr = retry.error
         }
-
-        // Retry upload once
-        ;({ error: upErr } = await supabaseAdmin.storage.from(STORAGE_BUCKET).upload(path, file, {
-          contentType: file.type,
-          upsert: false
-        }))
       }
     }
 
-    if (upErr) throw upErr
+    if (upErr) {
+        console.error("Upload error details:", upErr)
+        throw new Error(`Upload failed: ${upErr.message}`)
+    }
 
     const { data: publicUrl } = supabaseAdmin.storage.from(STORAGE_BUCKET).getPublicUrl(path)
     image_url = publicUrl.publicUrl
   }
 
   const { error } = await supabaseAdmin.from("services").insert({ title, description, image_url })
-  if (error) throw error
+  if (error) {
+      console.error("Database insert error:", error)
+      throw new Error(`Database insert failed: ${error.message}`)
+  }
 
   revalidatePath("/admin/services")
   revalidatePath("/services")
