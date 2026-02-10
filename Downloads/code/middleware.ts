@@ -1,72 +1,49 @@
-// middleware.ts
-import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  // If Supabase envs are missing, skip auth checks to avoid crashing the dev server.
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.warn("[middleware] Supabase env vars missing — skipping auth middleware.");
-    return NextResponse.next();
-  }
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-  // Single response instance to collect cookie writes from the Supabase helper
-  const response = NextResponse.next();
-
-  // Ensure common Supabase cookie names are proxied to the response so
-  // createServerClient can sync auth state correctly.
-  if (req.cookies.has("sb-access-token")) {
-    response.cookies.set("sb-access-token", req.cookies.get("sb-access-token")!.value);
-  }
-  if (req.cookies.has("sb-refresh-token")) {
-    response.cookies.set("sb-refresh-token", req.cookies.get("sb-refresh-token")!.value);
-  }
-
-  // Create Supabase server client that can read/write cookies
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          return req.cookies.getAll();
+          return request.cookies.getAll();
         },
-        setAll(cookies) {
-          cookies.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({
+            request,
           });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
     }
   );
 
-  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect all /admin routes
-  if (req.nextUrl.pathname.startsWith("/admin")) {
-    // Allow /admin/login without auth
-    if (req.nextUrl.pathname === "/admin/login") return response;
-
-    // Redirect if not logged in
-    if (!user) {
-      const redirect = req.nextUrl.clone();
-      redirect.pathname = "/admin/login";
-      return NextResponse.redirect(redirect);
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    // Allow login page
+    if (request.nextUrl.pathname === "/admin/login") {
+      return response;
     }
 
-    // Verify the user is in admin_profiles
-    const { data: admin } = await supabase
-      .from("admin_profiles")
-      .select("id")
-      .eq("id", user.id)
-      .single();
-
-    if (!admin) {
-      const redirect = req.nextUrl.clone();
-      redirect.pathname = "/";
-      return NextResponse.redirect(redirect);
+    // Redirect to login if no user
+    if (!user) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
 
@@ -74,5 +51,14 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
